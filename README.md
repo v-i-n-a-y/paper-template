@@ -51,8 +51,8 @@ uninstall.sh      Remove the installation
 ```
 make              Show help and current version
 make config       Show all settings and their current values
-make pdf          Build at current version (no version bump)
-make draft        Bump minor version, add watermark, archive to drafts/
+make pdf          Bump minor version, build with watermark (no archive)
+make draft        Bump minor version, build with watermark, archive to drafts/
 make bump         Increment major version, reset minor to 0
 make set-major N=2   Set major version to 2
 make set-minor N=0   Set minor version to 0
@@ -79,9 +79,10 @@ Edit `.env` or use `make set KEY=... VALUE=...`. Run `make config` to see all va
 
 ## Versioning
 
-The `.version` file holds `MAJOR.MINOR`. `make draft` auto-increments the minor
-number and saves a copy to `drafts/` named `<PAPER_NAME>-vMAJOR.MINOR.pdf`. Use
-`make bump` or `make set-major N=X` when starting a new revision cycle.
+The `.version` file holds `MAJOR.MINOR`. Both `make pdf` and `make draft`
+auto-increment the minor number on every build. `make draft` additionally saves
+a copy to `drafts/` named `<PAPER_NAME>-vMAJOR.MINOR.pdf`. Use `make bump` or
+`make set-major N=X` when starting a new revision cycle.
 
 The draft watermark is written to `version.tex` at build time and picked up by
 `preamble.tex`. `make submit` removes it before building — no source edits needed.

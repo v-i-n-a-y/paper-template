@@ -30,7 +30,7 @@ _vmajor = $(shell cut -d. -f1 $(VERSION_FILE) 2>/dev/null || echo 1)
 _vminor = $(shell cut -d. -f2 $(VERSION_FILE) 2>/dev/null || echo 0)
 
 .PHONY: help pdf draft bump set-major set-minor submit clean distclean \
-        config set setup init pages _build _autoclean
+        config set setup init pages _build _autoclean _version
 
 # ── Help ──────────────────────────────────────────────────────────────────────
 help:
@@ -62,17 +62,17 @@ updated = re.sub(r'^' + re.escape(key) + r'=.*', key + '=' + val, t, flags=re.M)
 p.write_text(updated if updated != t else t + key + '=' + val + '\n'); \
 print('  [config]  ' + key + '=' + val)"
 
-# ── PDF (no version bump) ─────────────────────────────────────────────────────
-pdf: version.tex $(PAPER_NAME).pdf ## Build paper at current version (no version bump)
-
-$(PAPER_NAME).pdf: main.tex version.tex $(DEPS)
-	@$(MAKE) --no-print-directory _build
-	@$(MAKE) --no-print-directory _autoclean
-
-version.tex: $(VERSION_FILE)
-	@MAJOR=$$(cut -d. -f1 $(VERSION_FILE)); \
-	 MINOR=$$(cut -d. -f2 $(VERSION_FILE)); \
-	 printf '\\usepackage{draftwatermark}\n\\SetWatermarkText{\\textbf{DRAFT v%s.%s}}\n\\SetWatermarkAngle{45}\n\\SetWatermarkScale{1}\n\\SetWatermarkLightness{0.78}\n' $$MAJOR $$MINOR > $@
+# ── PDF: bump minor, build (no archive) ──────────────────────────────────────
+pdf: ## Bump minor version, build with watermark (no archive)
+	@set -e; \
+	MAJOR=$$(cut -d. -f1 $(VERSION_FILE)); \
+	MINOR=$$(cut -d. -f2 $(VERSION_FILE)); \
+	MINOR=$$((MINOR + 1)); \
+	echo "$$MAJOR.$$MINOR" > $(VERSION_FILE); \
+	printf '\\usepackage{draftwatermark}\n\\SetWatermarkText{\\textbf{DRAFT v%s.%s}}\n\\SetWatermarkAngle{45}\n\\SetWatermarkScale{1}\n\\SetWatermarkLightness{0.78}\n' $$MAJOR $$MINOR > version.tex; \
+	echo "  [version] v$$MAJOR.$$MINOR"; \
+	$(MAKE) --no-print-directory _build; \
+	$(MAKE) --no-print-directory _autoclean
 
 # All artefacts go to BUILD_DIR; PDF is copied to root on completion.
 _build:
@@ -135,7 +135,7 @@ ifeq ($(AUTOCLEAN),true)
 endif
 
 # ── Rasterise pages ───────────────────────────────────────────────────────────
-pages: $(PAPER_NAME).pdf ## Rasterise PDF pages to page-*.png (requires poppler)
+pages: ## Rasterise PDF pages to page-*.png (build pdf first; requires poppler)
 	pdftoppm -r 100 $(PAPER_NAME).pdf page -png
 
 # ── Platform setup ────────────────────────────────────────────────────────────
